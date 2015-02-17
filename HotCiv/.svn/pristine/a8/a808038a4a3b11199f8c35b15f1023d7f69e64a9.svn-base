@@ -1,0 +1,58 @@
+Iterations:
+	1. Define a package/folder structure.
+		This step simply required that I create the folders
+		for the desired package structure as specified on
+		Moodle.
+	2. Move Java files into the structure.
+		I moved the Java files to the correct folders as
+		specified on Moodle. Once I did this, I had to
+		modify the compile.bat file to include the path
+		for the .java files. I also had to add the path for
+		the TestAlphaCiv.java file in run-test.bat.
+	3. Add package statements to the Java files.
+		After adding package statements, I had to import the
+		hotciv.frameworks package into GameImpl.java so that it
+		could access the classes in the files. In run-test.bat
+		I also had to remove part of the classpath and add the
+		package name to TestAlphaCiv.
+	4. Make a compile target to compile the java files.
+		For this step I created a build.xml file to replace 
+		compile.bat and run-test.bat. My first build.xml simply
+		echo'd some text. Then I used the javac task to compile
+		the src directory, which required that I add the location
+		of the JUnit jar.
+	5. Make a test target to run the tests.
+		I added a test target to the build.xml file that runs the
+		TestAlphaCiv.class file. I then had to add the location of
+		the JUnit jar file to the classpath. I also added a path
+		tag to create a variable for the path to the junit jar file.
+	6. Separate the build tree from the source code.
+		I had javac put the compiled code into the "build" directory
+		and added a "property" tag to create a variable for this
+		directory. I then had to add the directory of the compiled
+		code to the classpath so that the test target can find
+		the test file to run. I made a clean target and a prepare
+		target, and made the targets that compile code dependent on
+		the prepare target.
+	7. Add JavaDoc Documentation.
+		I added a javadoc target that creates javadoc documents for
+		everything in the source folder and puts them in the
+		javadoc folder. I also improved the clean and prepare targets
+		to remove/create the javadoc folder in the root directory.
+	8. Split the code into production code and test code trees.
+		I added a test folder to hold the test source files and then
+		a build-test target to compile the test files. I then
+		added a build-all target to combine the build-src and
+		build-test targets into a third comprehensive target. Lastly
+		I made the test target dependent on the build-all target.
+	9. Put the JUnit jar file in the lib folder.
+		This step merely required that I move the jar file and
+		update the path to in the property declaration.	
+
+Using the TDD rhythm on this assignment really helped to keep my coding
+organized. I've never worked with ant before so each step was new,
+and TDD helped to make sure I did each step correctly. It did, however,
+force me to do things at a slower pace than I would have otherwise.
+I wanted to immediately move all of the files into their respective
+folders as described in Moodle, but I had to wait until later iterations
+to most many of the files.

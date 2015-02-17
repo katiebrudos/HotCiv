@@ -1,0 +1,359 @@
+package hotciv.standard.integration;
+import hotciv.common.*;
+import hotciv.factory.AlphaFactory;
+import hotciv.framework.*;
+import hotciv.standard.CityImpl;
+import hotciv.standard.GameImpl;
+import hotciv.standard.UnitArcher;
+import hotciv.standard.UnitLegion;
+
+import org.junit.*;
+
+import static org.junit.Assert.*;
+
+/** Skeleton class for AlphaCiv test cases 
+
+   This source code is from the book 
+     "Flexible, Reliable Software:
+       Using Patterns and Agile Development"
+     published 2010 by CRC Press.
+   Author: 
+     Henrik B Christensen 
+     Computer Science Department
+     Aarhus University
+
+   This source code is provided WITHOUT ANY WARRANTY either 
+   expressed or implied. You may study, use, modify, and 
+   distribute it for non-commercial purposes. For any 
+   commercial use, see http://www.baerbak.com/
+ */
+public class TestAlphaCivIntegration {
+	private Game game;
+	/** Fixture for alphaciv testing. */
+	@Before
+	public void setUp() {
+		game = new GameImpl(new AlphaFactory()); 
+	}
+	
+	//---------------------GAME--------------------------
+	@Test
+	public void testTileAt0_0() {
+		assertNotNull(game.getTileAt(new Position(0, 0)));
+	}
+
+	@Test
+	public void testTileAt7_3() {
+		assertNotNull(game.getTileAt(new Position(7, 3)));
+	}
+
+	@Test
+	public void testUnitAt3_2() {
+		game.setUnitAt(new Position(3,2), new UnitLegion(Player.RED));
+		assertEquals(new UnitLegion(Player.RED),
+				game.getUnitAt(new Position(3,2)));
+	}
+
+	@Test
+	public void testUnitAt2_0() {
+		game.setUnitAt(new Position(2,0), new UnitArcher(Player.RED));
+		assertEquals(new UnitArcher(Player.RED),
+				game.getUnitAt(new Position(2,0)));
+	}
+
+	@Test
+	public void testCityAt1_1() {
+		game.setCityAt(new Position(1,1), new CityImpl(Player.RED,1,"",""));
+		assertEquals(new CityImpl(Player.RED,1,"",""),
+				game.getCityAt(new Position(1,1)));
+	}
+
+	@Test
+	public void testCityAt4_2() {
+		game.setCityAt(new Position(4,2), new CityImpl(Player.BLUE,1,"",""));
+		assertEquals(new CityImpl(Player.BLUE,1,"",""),
+				game.getCityAt(new Position(4,2)));
+	}
+
+	@Test
+	public void testCityAndUnitAt1_1() {
+		game.setCityAt(new Position(1,1), new CityImpl(Player.RED,1,"",""));
+		game.setUnitAt(new Position(1,1), new UnitArcher(Player.RED));
+		assertNotNull(game.getCityAt(new Position(1,1)));
+		assertNotNull(game.getUnitAt(new Position(1,1)));
+	}
+
+	@Test
+	public void testRedAttack() {
+		game.setUnitAt(new Position(1,2), new UnitArcher(Player.BLUE));
+		game.setUnitAt(new Position(1,1), new UnitArcher(Player.RED));
+		assertTrue(game.moveUnit(new Position(1,1), new Position(1,2)));
+		assertNull(game.getUnitAt(new Position(1,1)));
+		assertEquals(Player.RED, game.getUnitAt(new Position(1,2)).getOwner());
+	}
+
+	@Test
+	public void testBlueAttack() {
+		game.setUnitAt(new Position(1,2), new UnitArcher(Player.BLUE));
+		game.setUnitAt(new Position(1,1), new UnitArcher(Player.RED));
+		game.endOfTurn();
+		assertTrue(game.moveUnit(new Position(1,2), new Position(1,1)));
+		assertNull(game.getUnitAt(new Position(1,2)));
+		assertEquals(Player.BLUE, game.getUnitAt(new Position(1,1)).getOwner());
+	}
+	
+	@Test
+	public void testRegularMovement() {
+		game.setUnitAt(new Position(1,1), new UnitArcher(Player.RED));
+		assertTrue(game.moveUnit(new Position(1,1), new Position(1,2)));
+		assertNull(game.getUnitAt(new Position(1,1)));
+		assertNotNull(game.getUnitAt(new Position(1,2)));
+	}
+
+	@Test
+	public void testMovementLimitIsOneSpace() {
+		game.setUnitAt(new Position(1,1), new UnitArcher(Player.RED));
+		assertTrue(game.moveUnit(new Position(1,1), new Position(1,2)));
+		assertNull(game.getUnitAt(new Position(1,1)));
+		assertNotNull(game.getUnitAt(new Position(1,2)));
+
+		assertFalse(game.moveUnit(new Position(1,2), new Position(5,2)));
+		assertNull(game.getUnitAt(new Position(5,2)));
+		assertNotNull(game.getUnitAt(new Position(1,2)));
+	}
+
+	@Test
+	public void testMovementOverPlainsIsPossible() {
+		game.setUnitAt(new Position(5,5), new UnitArcher(Player.RED));
+		game.getTileAt(new Position(5,6)).changeTypeString(GameConstants.PLAINS);
+		game.moveUnit(new Position(5,5), new Position(5,6));
+		assertNull(game.getUnitAt(new Position(5,5)));
+		assertNotNull(game.getUnitAt(new Position(5,6)));
+
+	}
+
+	@Test
+	public void testMovementOverHillsIsPossible() {
+		game.setUnitAt(new Position(5,5), new UnitArcher(Player.RED));
+		game.getTileAt(new Position(5,6)).changeTypeString(GameConstants.HILLS);
+		game.moveUnit(new Position(5,5), new Position(5,6));
+		assertNull(game.getUnitAt(new Position(5,5)));
+		assertNotNull(game.getUnitAt(new Position(5,6)));
+	}
+
+	@Test
+	public void testMovementOverMountainsIsNOTPossible() {
+		game.setUnitAt(new Position(5,5), new UnitArcher(Player.RED));
+		game.getTileAt(new Position(5,6)).changeTypeString(GameConstants.MOUNTAINS);
+		game.moveUnit(new Position(5,5), new Position(5,6));
+		assertNull(game.getUnitAt(new Position(5,6)));
+		assertNotNull(game.getUnitAt(new Position(5,5)));
+	}
+
+	@Test
+	public void testMovementOverOceansIsNOTPossible() {
+		game.setUnitAt(new Position(5,5), new UnitArcher(Player.RED));
+		game.getTileAt(new Position(5,6)).changeTypeString(GameConstants.OCEANS);
+		game.moveUnit(new Position(5,5), new Position(5,6));
+		assertNull(game.getUnitAt(new Position(5,6)));
+		assertNotNull(game.getUnitAt(new Position(5,5)));
+	}
+
+	@Test
+	public void testUnitsOnlyMoveOncePerRound() {
+		Unit unit = new UnitLegion(Player.RED);
+		game.setUnitAt(new Position(3,2), unit);
+		game.moveUnit(new Position(3,2),new Position(3, 3));
+		assertNull(game.getUnitAt(new Position(3,2)));
+		assertNotNull(game.getUnitAt(new Position(3,3)));
+		
+		game.moveUnit(new Position(3,3),new Position(3, 4));
+		assertNull(game.getUnitAt(new Position(3,4)));
+		assertNotNull(game.getUnitAt(new Position(3,3)));
+	}
+
+	@Test
+	public void testRedTakesOverBlueCity() {
+		game.setCityAt(new Position(4,2), new CityImpl(Player.BLUE,1,"",""));
+		game.setUnitAt(new Position(4,1), new UnitArcher(Player.RED));
+		assertTrue(game.moveUnit(new Position(4,1), new Position(4,2)));
+
+		assertNull(game.getUnitAt(new Position(4,1)));
+		assertNotNull(game.getUnitAt(new Position(4,2)));
+		assertEquals(Player.RED, game.getCityAt(new Position(4,2)).getOwner());
+	}
+
+	@Test
+	public void testBlueTakesOverRedCity() {
+		game.setCityAt(new Position(4,2), new CityImpl(Player.RED,1,"",""));
+		game.setUnitAt(new Position(4,1), new UnitArcher(Player.BLUE));
+		game.endOfTurn();
+		assertTrue(game.moveUnit(new Position(4,1), new Position(4,2)));
+
+		assertNull(game.getUnitAt(new Position(4,1)));
+		assertNotNull(game.getUnitAt(new Position(4,2)));
+		assertEquals(Player.BLUE, game.getCityAt(new Position(4,2)).getOwner());
+	}
+
+	@Test
+	public void testRedStartsTurnFirst() {
+		assertEquals(Player.RED, game.getPlayerInTurn());
+	}
+
+	@Test
+	public void testRedCannotMoveBlue() {
+		game.setUnitAt(new Position(0,0), new UnitArcher(Player.BLUE));
+		assertFalse(game.moveUnit(new Position(0,0), new Position(1,0)));
+		assertNull(game.getUnitAt(new Position(1,0)));
+		assertNotNull(game.getUnitAt(new Position(0,0)));
+	}
+
+	@Test
+	public void testBlueCannotMoveRed() {
+		game.endOfTurn();
+		game.setUnitAt(new Position(0,0), new UnitArcher(Player.RED));
+		assertFalse(game.moveUnit(new Position(0,0), new Position(1,0)));
+		assertNull(game.getUnitAt(new Position(1,0)));
+		assertNotNull(game.getUnitAt(new Position(0,0)));
+	}
+
+	@Test
+	public void testArcherCosts10() {
+		City theCity = new CityImpl(Player.BLUE,1,GameConstants.ARCHER,"");
+		theCity.addProduction(20);
+		int productionBefore = theCity.getProductionAmount();
+		assertEquals(GameConstants.ARCHER, theCity.produce().getTypeString());
+		int productionAfter = theCity.getProductionAmount();
+		assertEquals(10, productionBefore - productionAfter);
+	}
+
+	@Test
+	public void testLegionCosts15() {
+		City theCity = new CityImpl(Player.BLUE,1,GameConstants.LEGION,"");
+		theCity.addProduction(20);
+		int productionBefore = theCity.getProductionAmount();
+		assertEquals(GameConstants.LEGION, theCity.produce().getTypeString());
+		int productionAfter = theCity.getProductionAmount();
+		assertEquals(15, productionBefore - productionAfter);
+	}
+
+	@Test
+	public void testSettlerCosts30() {
+		City theCity = new CityImpl(Player.BLUE,1,GameConstants.SETTLER,"");
+		theCity.addProduction(40);
+		int productionBefore = theCity.getProductionAmount();
+		assertEquals(GameConstants.SETTLER, theCity.produce().getTypeString());
+		int productionAfter = theCity.getProductionAmount();
+		assertEquals(30, productionBefore - productionAfter);
+	}
+	
+	@Test
+	public void testCityPopulationStaysAt1() {
+		City theCity = new CityImpl(Player.BLUE,1,GameConstants.ARCHER,GameConstants.foodFocus);
+		game.setCityAt(new Position(6,7), theCity);
+		assertEquals(1,theCity.getSize());
+		game.endOfRound();
+		assertEquals(1,theCity.getSize());
+	}
+	
+	@Test
+	public void testCityGets6ProductionAtEndOfRound() {
+		City theCity = new CityImpl(Player.RED, 1, GameConstants.ARCHER, GameConstants.productionFocus);
+		game.setCityAt(new Position(5,4), theCity);
+		int prodBefore, prodAfter;
+		prodBefore = theCity.getProductionAmount();
+		game.endOfRound();
+		prodAfter = theCity.getProductionAmount();
+		assertEquals(6,prodAfter - prodBefore);
+	}
+	
+	@Test
+	public void testUnitMovementIsRefreshedAtEndOfTurn() {
+		Unit theUnit = new UnitLegion(Player.RED);
+		game.setUnitAt(new Position(5,4), theUnit);
+		assertEquals(1, theUnit.getMoveCount());
+		game.moveUnit(new Position(5,4), new Position(4,4));
+		assertEquals(0, theUnit.getMoveCount());
+		game.endOfRound();
+		assertEquals(1, theUnit.getMoveCount());
+	}
+	
+	@Test
+	public void testProducedUnitAppearsInEmptyCity() {
+		City theCity = new CityImpl(Player.RED, 1, GameConstants.ARCHER, "");
+		game.setCityAt(new Position(5,4), theCity);
+		theCity.addProduction(50);
+		assertNull(game.getUnitAt(new Position(5,4)));
+		game.endOfRound();
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(5,4)).getTypeString());
+	}
+	
+	@Test
+	public void testProducedUnitAppearsNorthOfOccupiedCity() {
+		City theCity = new CityImpl(Player.RED, 1, GameConstants.ARCHER, "");
+		game.setCityAt(new Position(5,4), theCity);
+		theCity.addProduction(50);
+		game.endOfRound();
+		assertNull(game.getUnitAt(new Position(5,5)));
+		game.endOfRound();
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(5,5)).getTypeString());
+	}
+	
+	@Test
+	public void testProducedUnitAppearsClockwise() {
+		City theCity = new CityImpl(Player.RED, 1, GameConstants.ARCHER, "");
+		game.setCityAt(new Position(5,5), theCity);
+		theCity.addProduction(100);
+		assertNull(game.getUnitAt(new Position(5,5)));
+		game.endOfRound();
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(5,5)).getTypeString());
+		
+		assertNull(game.getUnitAt(new Position(5,6)));
+		game.endOfRound();
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(5,6)).getTypeString());
+		
+		assertNull(game.getUnitAt(new Position(6,6)));
+		game.endOfRound();
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(6,6)).getTypeString());
+		
+		assertNull(game.getUnitAt(new Position(6,5)));
+		game.endOfRound();
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(6,5)).getTypeString());
+		
+		assertNull(game.getUnitAt(new Position(6,4)));
+		game.endOfRound();
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(6,4)).getTypeString());
+		
+		assertNull(game.getUnitAt(new Position(5,4)));
+		game.endOfRound();
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(5,4)).getTypeString());
+		
+		assertNull(game.getUnitAt(new Position(4,4)));
+		game.endOfRound();
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(4,4)).getTypeString());
+		
+		assertNull(game.getUnitAt(new Position(4,5)));
+		game.endOfRound();
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(4,5)).getTypeString());
+		
+		assertNull(game.getUnitAt(new Position(4,6)));
+		game.endOfRound();
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(4,6)).getTypeString());
+	}
+	
+	@Test
+	public void testAlphaCivSetup() {
+		assertEquals(Player.RED, game.getPlayerInTurn());
+		assertEquals(Player.RED, game.getCityAt(new Position(1,1)).getOwner());
+		assertEquals(Player.BLUE, game.getCityAt(new Position(4,2)).getOwner());
+		assertEquals(GameConstants.PLAINS, game.getTileAt(new Position(0,0)).getTypeString());
+		assertEquals(GameConstants.OCEANS, game.getTileAt(new Position(1,0)).getTypeString());
+		assertEquals(GameConstants.HILLS, game.getTileAt(new Position(0,1)).getTypeString());
+		assertEquals(GameConstants.MOUNTAINS, game.getTileAt(new Position(2,2)).getTypeString());
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(2,0)).getTypeString());
+		assertEquals(Player.RED, game.getUnitAt(new Position(2,0)).getOwner());
+		assertEquals(GameConstants.LEGION, game.getUnitAt(new Position(3,2)).getTypeString());
+		assertEquals(Player.BLUE, game.getUnitAt(new Position(3,2)).getOwner());
+		assertEquals(GameConstants.SETTLER, game.getUnitAt(new Position(4,3)).getTypeString());
+		assertEquals(Player.RED, game.getUnitAt(new Position(4,3)).getOwner());
+	}
+}

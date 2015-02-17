@@ -1,0 +1,105 @@
+package hotciv.standard.integration;
+
+
+import static org.junit.Assert.*;
+import hotciv.standard.CityImpl;
+import hotciv.standard.GameImpl;
+import hotciv.standard.UnitArcher;
+import hotciv.variant.*;
+import hotciv.common.ActionStrategyAlpha;
+import hotciv.common.SetupStrategyAlpha;
+import hotciv.framework.*;
+
+import org.junit.Before;
+import org.junit.Test;
+
+public class TestBetaCivIntegration {
+	Game game;
+	
+	@Before
+	public void setUp() {
+		game = new GameImpl(new BetaFactory()); 
+	}
+	
+	@Test
+	public void testWinner() {
+		assertNull(game.getWinner());
+		game.setUnitAt(new Position(4,1), new UnitArcher(Player.RED));
+		game.setCityAt(new Position(4,2), new CityImpl(Player.BLUE, 1, GameConstants.ARCHER, GameConstants.productionFocus));
+		game.moveUnit(new Position(4,1), new Position(4,2));
+		assertEquals(Player.RED, game.getCityAt(new Position(4,2)).getOwner());
+		assertEquals(Player.RED, game.getWinner());
+	}
+	
+	@Test
+	public void testAgeGrowth4000BCto100BC() {
+		game.setAge(-4000);
+		assertEquals(-4000,game.getAge());
+		game.endOfRound();
+		assertEquals(-3900,game.getAge());
+		game.setAge(-200);
+		assertEquals(-200,game.getAge());
+		game.endOfRound();
+		assertEquals(-100,game.getAge());
+	}
+	
+	@Test
+	public void testAgeGrowth100BCto50AD() {	
+		game.setAge(-100);
+		assertEquals(-100,game.getAge());
+		game.endOfRound();
+		assertEquals(-1,game.getAge());
+		game.endOfRound();
+		assertEquals(1,game.getAge());
+		game.endOfRound();
+		assertEquals(50,game.getAge());
+	}
+	
+	@Test
+	public void testAgeGrowth50ADto1750AD() {
+		game.setAge(50);
+		assertEquals(50,game.getAge());
+		game.endOfRound();
+		assertEquals(100,game.getAge());
+		game.setAge(1700);
+		assertEquals(1700,game.getAge());
+		game.endOfRound();
+		assertEquals(1750,game.getAge());
+	}
+	
+	@Test
+	public void testAgeGrowth1750ADto1900AD() {
+		game.setAge(1750);
+		assertEquals(1750,game.getAge());
+		game.endOfRound();
+		assertEquals(1775,game.getAge());
+		game.setAge(1875);
+		assertEquals(1875,game.getAge());
+		game.endOfRound();
+		assertEquals(1900,game.getAge());
+	}
+		
+	@Test
+	public void testAgeGrowth1900ADto1970AD() {
+		game.setAge(1900);
+		assertEquals(1900,game.getAge());
+		game.endOfRound();
+		assertEquals(1905,game.getAge());
+		game.setAge(1965);
+		assertEquals(1965,game.getAge());
+		game.endOfRound();
+		assertEquals(1970,game.getAge());
+	}
+	
+	@Test
+	public void testAgeGrowth1970ADtoInfinityAndBeyond() {
+		game.setAge(1970);
+		assertEquals(1970,game.getAge());
+		game.endOfRound();
+		assertEquals(1971,game.getAge());
+		game.setAge(2012);
+		assertEquals(2012,game.getAge());
+		game.endOfRound();
+		assertEquals("Looks like the Mayans were right, 2012 is the end!",2013,game.getAge());
+	}
+}

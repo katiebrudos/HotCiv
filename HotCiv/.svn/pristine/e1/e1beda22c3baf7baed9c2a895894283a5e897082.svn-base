@@ -1,0 +1,65 @@
+package hotciv.tool;
+
+import hotciv.framework.Game;
+import hotciv.framework.GameConstants;
+import hotciv.framework.Position;
+import hotciv.view.GfxConstants;
+
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+
+import minidraw.framework.Drawing;
+import minidraw.framework.DrawingEditor;
+import minidraw.standard.AbstractTool;
+import minidraw.standard.NullTool;
+
+public class ChangeCityTool extends AbstractTool {
+	private Game game;
+
+	public ChangeCityTool(Game game, DrawingEditor editor) {
+		super(editor);
+		this.game = game;
+	}
+
+	public void mouseDown(MouseEvent e, int x, int y) {		
+		Drawing model = editor().drawing();
+		model.lock();
+		
+		if(y >= GfxConstants.WORKFORCEFOCUS_Y 
+				&& y < GfxConstants.WORKFORCEFOCUS_Y+GfxConstants.TILESIZE  
+				&& x>= GfxConstants.WORKFORCEFOCUS_X && x < GfxConstants.WORKFORCEFOCUS_X+GfxConstants.TILESIZE){
+			
+			Position p2 = game.getCurrentCityFocusPosition();
+			String bal = game.getCityAt(p2).getWorkforceFocus();
+			System.out.println("workforce before: " + bal);
+			
+			if(bal.equals(GameConstants.foodFocus)){ bal = GameConstants.productionFocus;}
+			else{ bal = GameConstants.foodFocus;}
+			game.changeWorkForceFocusInCityAt(p2, bal);
+			
+			System.out.println("ChangeCityTool activated: workforce change" );
+			System.out.println("workforce after: " + bal);
+		}
+		else if(y >= GfxConstants.CITY_PRODUCTION_Y
+				&& y< GfxConstants.CITY_PRODUCTION_Y+GfxConstants.TILESIZE
+				&& x >= GfxConstants.CITY_PRODUCTION_X
+				&& x < GfxConstants.CITY_PRODUCTION_X+ GfxConstants.TILESIZE){
+
+			Position p2 = game.getCurrentCityFocusPosition();
+			String production = game.getCityAt(p2).getProduction();
+			
+			if(production.equals(GameConstants.ARCHER)){ production = GameConstants.LEGION;}
+			else if(production.equals(GameConstants.LEGION)){ production = GameConstants.SETTLER;}
+			else{ production = GameConstants.ARCHER;}
+			game.changeProductionInCityAt(p2, production);
+			
+			System.out.println("ChangeCityTool activated: production change" );
+			
+		}
+
+	}
+	
+	public void mouseUp(MouseEvent e, int x, int y) {
+		editor().drawing().unlock();
+	}
+}

@@ -1,0 +1,11 @@
+package hotciv.variant;
+
+import hotciv.common.AlphaFactory;
+import hotciv.framework.WinnerStrategy;
+
+public class ZetaFactory extends AlphaFactory {
+	@Override
+	public WinnerStrategy getWinnerStrategy() {
+		return new WinnerStrategyZeta();
+	}
+}

@@ -1,0 +1,365 @@
+package hotciv.standard;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import hotciv.framework.*;
+
+/** Skeleton implementation of HotCiv.
+
+   This source code is from the book 
+     "Flexible, Reliable Software:
+       Using Patterns and Agile Development"
+     published 2010 by CRC Press.
+   Author: 
+     Henrik B Christensen 
+     Computer Science Department
+     Aarhus University
+
+   This source code is provided WITHOUT ANY WARRANTY either 
+   expressed or implied. You may study, use, modify, and 
+   distribute it for non-commercial purposes. For any 
+   commercial use, see http://www.baerbak.com/
+ */
+
+public class GameImpl implements Game {
+	private Tile[][] gameBoard;
+	private Player currentPlayerInTurn;
+	private ArrayList<Tile> cityTiles; 
+	private ArrayList<Unit> unitList;
+	private AgeStrategy ageStrategy;
+	private WinnerStrategy winnerStrategy;
+	private ActionStrategy actionStrategy;
+	private AttackStrategy attackStrategy;
+	private ProductionStrategy productionStrategy;
+	private GrowthStrategy growthStrategy;
+	private HashMap<Player, Integer> winHashMap;
+	private int age;
+	private int roundNumber;
+
+	private GameObserver observer;
+
+	public GameImpl(HotCivFactory factory) {
+		currentPlayerInTurn = Player.RED;
+
+		cityTiles = new ArrayList<Tile>(); 
+		unitList = new ArrayList<Unit>();
+		ageStrategy = factory.getAgeStrategy();
+		winnerStrategy = factory.getWinnerStrategy();
+		actionStrategy = factory.getActionStrategy();
+		attackStrategy = factory.getAttackStrategy();
+		productionStrategy = factory.getProductionStrategy();
+		growthStrategy = factory.getGrowthStrategy();
+		age = -4000;
+		winHashMap = new HashMap<Player, Integer>(); 
+		winHashMap.put(Player.RED, 0);
+		winHashMap.put(Player.BLUE, 0);
+		roundNumber = 1;
+
+		gameBoard = factory.getSetupStrategy().setupGameboard();
+	}
+
+	public void addObserver(GameObserver gameObserver){
+		observer = gameObserver;
+	}
+
+	public Tile getTileAt( Position p ) {
+		if(isValidPosition(p))
+			return gameBoard[p.getRow()][p.getColumn()];
+		else
+			return null;
+	}
+
+	public Unit getUnitAt( Position p ) {
+		if(isValidPosition(p))
+			return getTileAt(p).getUnit();
+		else
+			return null;
+	}
+
+	public void setUnitAt( Position p, Unit unit){
+		if(isValidPosition(p) && unit != null) {
+			unitList.add(unit); 
+			getTileAt(p).setUnit(unit);
+		}
+	}
+
+	public void removeUnitAt(Position p){
+		if(isValidPosition(p))
+			getTileAt(p).setUnit(null);
+	}
+
+	public City getCityAt( Position p ) {
+		if(isValidPosition(p))
+			return  getTileAt(p).getCity();
+		else
+			return null;
+	}
+
+	public void setCityAt( Position p, City city){
+		if(isValidPosition(p) && city != null) {
+			cityTiles.add(getTileAt(p));
+			getTileAt(p).addCity(city);
+		}
+	}
+
+	public Player getPlayerInTurn() {
+		return currentPlayerInTurn;
+	}
+
+	@Override
+	public void endOfTurn() {
+		if(currentPlayerInTurn == Player.RED) {
+			currentPlayerInTurn = Player.BLUE;
+		} else if(currentPlayerInTurn == Player.BLUE) {
+			currentPlayerInTurn = Player.RED;
+		}
+	}
+
+	@Override
+	public void setAge(int age){
+		this.age = age;
+	}
+
+	@Override
+	public int getAge() {
+		return age; 
+	}
+
+
+	public boolean moveUnit( Position from, Position to ) {
+		if(isValidMove(from, to)) {
+			Unit fromUnit = getUnitAt(from);
+			if(getUnitAt(to) != null && getUnitAt(to).getOwner() != currentPlayerInTurn) {
+				Unit defendingUnit = getUnitAt(to);
+				Unit attackingUnit = fromUnit;
+
+				int attackerAdjacentUnits = 0;
+				int attackerTerrainFactor = 1; 
+				int defenderAdjacentUnits = 0; 
+				int defenderTerrainFactor = 1; 
+
+				attackerAdjacentUnits = getNumberOfAdjacentUnits(from, attackingUnit.getOwner()); 
+				defenderAdjacentUnits = getNumberOfAdjacentUnits(to, defendingUnit.getOwner()); 
+				attackerTerrainFactor = getTerrainFactor(from); 
+				defenderTerrainFactor = getTerrainFactor(to); 
+				if(attackStrategy.attack(attackingUnit, defendingUnit, attackerAdjacentUnits, attackerTerrainFactor, 
+						defenderAdjacentUnits, defenderTerrainFactor) == true) {
+					if(getCityAt(to) != null) {
+						getCityAt(to).changeOwner(getUnitAt(from).getOwner());
+					}
+					setUnitAt(to, fromUnit);
+					removeUnitAt(from);
+					fromUnit.hasMoved();
+					winnerStrategy.countAttack(winHashMap, attackingUnit.getOwner());
+				}else{
+					removeUnitAt(from);
+				}
+				observer.worldChangedAt(from);
+				observer.worldChangedAt(to);
+			} else {
+				if(getCityAt(to) != null) {
+					getCityAt(to).changeOwner(getUnitAt(from).getOwner());
+				}
+				setUnitAt(to, fromUnit);
+				removeUnitAt(from);
+				fromUnit.hasMoved();
+				observer.worldChangedAt(from);
+				observer.worldChangedAt(to);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public void endOfRound() {
+		age += ageStrategy.incrementAge(age);
+		roundNumber++;
+
+		ArrayList<Tile> surroundingTiles;
+		City city;
+		String wff;
+		for(Tile tile : cityTiles) {
+			city = tile.getCity();
+			surroundingTiles = getSurroundingTiles(tile.getPosition());
+			wff = city.getWorkforceFocus();
+
+			if(wff == GameConstants.productionFocus) {
+				city.addProduction(productionStrategy.getProductionIncrease(city.getSize(), surroundingTiles));
+			} else if(wff == GameConstants.foodFocus) {
+				city.addFood(productionStrategy.getFoodIncrease(city.getSize(), surroundingTiles));
+			}
+			growthStrategy.grow(tile.getCity());
+			setNewUnit(city.produce(), tile);
+		}	
+		for(Unit unit : unitList) {
+			unit.resetMoveCount(); 
+		}
+	}
+
+	private ArrayList<Tile> getSurroundingTiles(Position p) {
+		ArrayList<Tile> surroundingTiles = new ArrayList<Tile>();
+		int row = p.getRow();
+		int column = p.getColumn();
+		//four corners
+		if(row != 0 && column != 0) { // top-left
+			surroundingTiles.add(getTileAt(new Position(row-1,column-1)));
+		}
+		if(row != 0) { // top
+			surroundingTiles.add(getTileAt(new Position(row-1,column)));
+		}
+		if(column != 0) { // left
+			surroundingTiles.add(getTileAt(new Position(row,column-1)));
+		}
+		if(row != GameConstants.WORLDSIZE-1 && column != 0) { // bottom left
+			surroundingTiles.add(getTileAt(new Position(row+1,column-1)));
+		}
+		if(row != 0 && column != GameConstants.WORLDSIZE-1) { // top right
+			surroundingTiles.add(getTileAt(new Position(row-1,column+1)));
+		}
+		if(row != GameConstants.WORLDSIZE-1) { // bottom
+			surroundingTiles.add(getTileAt(new Position(row+1,column)));
+		}
+		if(column != GameConstants.WORLDSIZE-1) { // right
+			surroundingTiles.add(getTileAt(new Position(row,column+1)));
+		}
+		if(row != GameConstants.WORLDSIZE-1 && column != GameConstants.WORLDSIZE-1) { // bottom left
+			surroundingTiles.add(getTileAt(new Position(row+1,column+1)));
+		}
+		return surroundingTiles;
+	}
+
+	private void setNewUnit(Unit unit, Tile tile){
+		if(unit != null) {
+			Position newPos = nextOpenSpace(tile.getPosition());
+			if(newPos != null) {
+				setUnitAt(newPos, unit);
+			}
+		}
+	}
+
+	private Position nextOpenSpace(Position p) {
+		int x = p.getRow(); 
+		int y = p.getColumn();
+
+		if(getUnitAt(p) == null) {
+			return p; 
+		} else if (getUnitAt(new Position(x, Math.min(GameConstants.WORLDSIZE-1, y+1))) == null) {
+			return new Position(x, Math.min(GameConstants.WORLDSIZE-1, y+1)); 
+		} else if (getUnitAt(new Position(Math.min(GameConstants.WORLDSIZE-1, x+1), Math.min(GameConstants.WORLDSIZE-1, y+1))) == null) {
+			return new Position(Math.min(GameConstants.WORLDSIZE-1, x+1), Math.min(GameConstants.WORLDSIZE-1, y+1)); 
+		} else if (getUnitAt(new Position(Math.min(GameConstants.WORLDSIZE-1, x+1), y)) == null) {
+			return new Position(Math.min(GameConstants.WORLDSIZE-1, x+1), y);
+		} else if (getUnitAt(new Position(Math.min(GameConstants.WORLDSIZE-1, x+1), Math.max(0, y-1))) == null) {
+			return new Position(Math.min(GameConstants.WORLDSIZE-1, x+1), Math.max(0, y-1)); 
+		} else if (getUnitAt(new Position(x, Math.max(0, y-1))) == null) {
+			return new Position(x, Math.max(0, y-1)); 
+		} else if (getUnitAt(new Position(Math.max(0, x-1), Math.max(0, y-1))) == null) {
+			return new Position(Math.max(0, x-1), Math.max(0, y-1)); 
+		} else if (getUnitAt(new Position(Math.max(0, x-1), y)) == null) {
+			return new Position(Math.max(0, x-1), y); 
+		} else if (getUnitAt(new Position(Math.max(0, x-1), Math.min(GameConstants.WORLDSIZE-1, y+1))) == null) {
+			return new Position(Math.max(0, x-1), Math.min(GameConstants.WORLDSIZE-1, y+1));
+		} else {
+			return null; 
+		}
+	}
+
+	private int getNumberOfAdjacentUnits(Position p, Player player) {
+
+		int x = p.getRow(); 
+		int y = p.getColumn();
+		int numberOfAdjacentUnits = 0; 
+
+		if (getUnitAt(new Position(x, Math.min(GameConstants.WORLDSIZE-1, y+1))) != null 
+				&& getUnitAt(new Position(x, Math.min(GameConstants.WORLDSIZE-1, y+1))).getOwner() == player) {
+			numberOfAdjacentUnits++; 
+		}
+		if (getUnitAt(new Position(Math.min(GameConstants.WORLDSIZE-1, x+1), Math.min(GameConstants.WORLDSIZE-1, y+1))) != null
+				&& getUnitAt(new Position(Math.min(GameConstants.WORLDSIZE-1, x+1), Math.min(GameConstants.WORLDSIZE-1, y+1))).getOwner() == player) {
+			numberOfAdjacentUnits++; 
+		}
+		if (getUnitAt(new Position(Math.min(GameConstants.WORLDSIZE-1, x+1), y)) != null
+				&& getUnitAt(new Position(Math.min(GameConstants.WORLDSIZE-1, x+1), y)).getOwner() == player) {
+			numberOfAdjacentUnits++; 
+		}
+		if (getUnitAt(new Position(Math.min(GameConstants.WORLDSIZE-1, x+1), Math.max(GameConstants.WORLDSIZE-1, y-1))) != null
+				&& getUnitAt(new Position(Math.min(GameConstants.WORLDSIZE-1, x+1), Math.max(GameConstants.WORLDSIZE-1, y-1))).getOwner() == player) {
+			numberOfAdjacentUnits++; 
+		}
+		if (getUnitAt(new Position(x, Math.max(GameConstants.WORLDSIZE-1, y-1))) != null
+				&& getUnitAt(new Position(x, Math.max(GameConstants.WORLDSIZE-1, y-1))).getOwner() == player) {
+			numberOfAdjacentUnits++; 
+		}
+		if (getUnitAt(new Position(Math.max(GameConstants.WORLDSIZE-1, x-1), Math.max(GameConstants.WORLDSIZE-1, y-1))) != null 
+				&& getUnitAt(new Position(Math.max(GameConstants.WORLDSIZE-1, x-1), Math.max(GameConstants.WORLDSIZE-1, y-1))).getOwner() == player) {
+			numberOfAdjacentUnits++; 
+		}
+		if (getUnitAt(new Position(Math.max(GameConstants.WORLDSIZE-1, x-1), y)) != null 
+				&& getUnitAt(new Position(Math.max(GameConstants.WORLDSIZE-1, x-1), y)).getOwner() == player) {
+			numberOfAdjacentUnits++; 
+		}
+		if (getUnitAt(new Position(Math.max(GameConstants.WORLDSIZE-1, x-1), Math.min(GameConstants.WORLDSIZE-1, y+1))) != null 
+				&& getUnitAt(new Position(Math.max(GameConstants.WORLDSIZE-1, x-1), Math.min(GameConstants.WORLDSIZE-1, y+1))).getOwner() == player) {
+			numberOfAdjacentUnits++; 
+		}
+
+		return numberOfAdjacentUnits; 
+	}
+
+	private int getTerrainFactor(Position p) {
+		String terrain = getTileAt(p).getTypeString(); 
+
+		if (getTileAt(p).getCity() != null){
+			return 3; 
+		}
+		else if(terrain.equals(GameConstants.FOREST) || terrain.equals(GameConstants.HILLS)) {
+			return 2; 
+		}
+		else {
+			return 1; 
+		}
+	}
+
+	public Player getWinner() {
+		return winnerStrategy.getWinner(age, cityTiles, winHashMap, roundNumber);
+	}
+
+	public void changeWorkForceFocusInCityAt( Position p, String balance ) {
+		gameBoard[p.getRow()][p.getColumn()].getCity().setWorkforceFocus(balance);
+	}
+
+	public void changeProductionInCityAt( Position p, String unitType ) {
+		gameBoard[p.getRow()][p.getColumn()].getCity().setProduction(unitType);
+	}
+
+
+	public void performUnitActionAt(Position p) {
+		Unit unit = getUnitAt(p);
+		if(unit != null && currentPlayerInTurn.equals(unit.getOwner())) {
+			actionStrategy.performUnitActionAt(gameBoard, p);
+		}
+	}
+
+	private boolean isValidPosition(Position p) {
+		return p.getRow() >= 0 && p.getRow() < GameConstants.WORLDSIZE && p.getColumn() >= 0 && p.getColumn() < GameConstants.WORLDSIZE;
+	}
+
+	private boolean isValidMove(Position from, Position to) {
+		Tile toTile = getTileAt(to);
+		return isValidPosition(from) && isValidPosition(to)
+				&& getUnitAt(from) != null
+				&& Math.abs(from.getRow()-to.getRow()) <= 1
+				&& Math.abs(from.getColumn()-to.getColumn()) <= 1
+				&& ((Math.abs(from.getRow()-to.getRow()) != 0) || (Math.abs(from.getColumn()-to.getColumn()) !=0))
+				&& toTile.getTypeString() != GameConstants.MOUNTAINS
+				&& toTile.getTypeString() != GameConstants.OCEANS
+				&& getUnitAt(from).getMoveCount() > 0
+				&& getUnitAt(from).getOwner().equals(currentPlayerInTurn);
+	}
+
+	@Override
+	public void setTileFocus(Position position) {
+		observer.tileFocusChangedAt(position);
+	}
+}

@@ -1,0 +1,109 @@
+package hotciv.standard;
+
+import hotciv.framework.City;
+import hotciv.framework.GameConstants;
+import hotciv.framework.Player;
+import hotciv.framework.Unit;
+
+public class UnitArcher extends UnitImpl {
+	boolean fortified;
+	boolean hasMoved;
+
+	public UnitArcher(Player owner) {
+		super(GameConstants.ARCHER, owner, 1, 3, 2);
+		fortified = false;
+		hasMoved = false;
+	}
+
+	public Boolean isFortified() {
+		return fortified;
+	}
+	
+	public void performAction() {
+		if(fortified) {
+			defortify();
+		} else {
+			fortify();
+		}
+	}
+	
+	private void fortify() {
+		unitGeneric.moveCount = 0;
+		unitGeneric.defense = unitGeneric.defense * 2;
+		fortified = true;
+	}
+	
+	private void defortify() {
+		if(!hasMoved) {
+			unitGeneric.moveCount = 1;
+		}
+		unitGeneric.defense = unitGeneric.defense / 2;
+		fortified = false;
+	}
+	
+	public void hasMoved() {
+		hasMoved = true;
+	}
+	
+	public void resetMoveCount() {
+		unitGeneric.resetMoveCount();
+		hasMoved = false;
+	}
+	
+//	@Override
+//	public City performAction() {
+//		if(fortified) {
+//			super.setMoveCount(1);
+//			super.defense = super.getDefensiveStrength() / 2;
+//			fortified = false;
+//		} else {
+//			super.setMoveCount(0);
+//			super.defense = 2 * super.getDefensiveStrength();
+//			fortified = true;
+//		}
+//		return null;
+//	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == null) { return false; }
+		if (o.getClass() != UnitArcher.class) { return false; }
+		return super.equals(o);
+	}
+
+	@Override
+	public UnitGeneric getUnitGeneric() {
+		return unitGeneric;
+	}
+	
+	@Override
+	public String getTypeString() {
+		return unitGeneric.type;
+	}
+
+	@Override
+	public Player getOwner() {
+		return unitGeneric.owner;
+	}
+
+	@Override
+	public int getMoveCount() {
+		return unitGeneric.moveCount;
+	}
+
+	@Override
+	public void setMoveCount(int count) {
+		unitGeneric.moveCount = count;
+	}
+
+	@Override
+	public int getDefensiveStrength() {
+		return unitGeneric.defense;
+	}
+
+	@Override
+	public int getAttackingStrength() {
+		return unitGeneric.attack;
+	}
+
+}

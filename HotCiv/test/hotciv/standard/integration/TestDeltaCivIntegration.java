@@ -1,0 +1,74 @@
+package hotciv.standard.integration;
+
+
+import static org.junit.Assert.*;
+import hotciv.factory.DeltaFactory;
+import hotciv.framework.*;
+import hotciv.standard.GameImpl;
+
+import org.junit.Before;
+import org.junit.Test;
+
+public class TestDeltaCivIntegration {
+	Game game;
+	
+	@Before
+	public void setUp() {
+		game = new GameImpl(new DeltaFactory()); 
+	}
+	
+	@Test 
+	public void testMountains() {
+		assertEquals(GameConstants.MOUNTAINS, game.getTileAt(new Position(0,5)).getTypeString());
+		assertEquals(GameConstants.MOUNTAINS, game.getTileAt(new Position(3,3)).getTypeString());
+		assertEquals(GameConstants.MOUNTAINS, game.getTileAt(new Position(7,13)).getTypeString());
+		assertEquals(GameConstants.MOUNTAINS, game.getTileAt(new Position(11,5)).getTypeString());
+	}
+	
+	@Test
+	public void testOceans() {
+		assertEquals(GameConstants.OCEANS, game.getTileAt(new Position(0,0)).getTypeString());
+		assertEquals(GameConstants.OCEANS, game.getTileAt(new Position(0,11)).getTypeString());
+		assertEquals(GameConstants.OCEANS, game.getTileAt(new Position(6,0)).getTypeString());
+		assertEquals(GameConstants.OCEANS, game.getTileAt(new Position(14,13)).getTypeString());
+	}
+	
+	@Test 
+	public void testForests() {
+		assertEquals(GameConstants.FOREST, game.getTileAt(new Position(1,9)).getTypeString());
+		assertEquals(GameConstants.FOREST, game.getTileAt(new Position(5,2)).getTypeString());
+		assertEquals(GameConstants.FOREST, game.getTileAt(new Position(9,11)).getTypeString());
+		assertEquals(GameConstants.FOREST, game.getTileAt(new Position(12,9)).getTypeString());
+	}   
+	
+	@Test 
+	public void testPlains() {
+		assertEquals(GameConstants.PLAINS, game.getTileAt(new Position(0,3)).getTypeString());
+		assertEquals(GameConstants.PLAINS, game.getTileAt(new Position(3,6)).getTypeString());
+		assertEquals(GameConstants.PLAINS, game.getTileAt(new Position(8,7)).getTypeString());
+		assertEquals(GameConstants.PLAINS, game.getTileAt(new Position(13,12)).getTypeString());
+	}
+	
+	@Test 
+	public void testHills() {
+		assertEquals(GameConstants.HILLS, game.getTileAt(new Position(1,3)).getTypeString());
+		assertEquals(GameConstants.HILLS, game.getTileAt(new Position(4,9)).getTypeString());
+		assertEquals(GameConstants.HILLS, game.getTileAt(new Position(7,10)).getTypeString());
+		assertEquals(GameConstants.HILLS, game.getTileAt(new Position(14,6)).getTypeString());
+	}
+	
+	@Test
+	public void testSetup() {
+		assertEquals(Player.RED, game.getCityAt(new Position(8,12)).getOwner());
+		assertEquals(Player.BLUE, game.getCityAt(new Position(4,5)).getOwner());
+		Unit unit = game.getUnitAt(new Position(3,8));
+		assertEquals(Player.RED, unit.getOwner());
+		assertEquals(GameConstants.ARCHER, unit.getTypeString());
+		unit = game.getUnitAt(new Position(4,4));
+		assertEquals(Player.BLUE, unit.getOwner());
+		assertEquals(GameConstants.LEGION, unit.getTypeString());
+		unit = game.getUnitAt(new Position(5,5));
+		assertEquals(Player.BLUE, unit.getOwner());
+		assertEquals(GameConstants.SETTLER, unit.getTypeString());
+	}
+}

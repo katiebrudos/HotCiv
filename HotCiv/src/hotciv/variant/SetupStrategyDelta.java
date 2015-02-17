@@ -1,0 +1,97 @@
+package hotciv.variant;
+
+import java.io.*;
+import java.util.Scanner;
+
+import hotciv.framework.*;
+import hotciv.standard.CityImpl;
+import hotciv.standard.TileImpl;
+import hotciv.standard.UnitArcher;
+import hotciv.standard.UnitLegion;
+import hotciv.standard.UnitSettler;
+
+/**
+ * input variant files (*.txt) must be in the same package as this file.
+ * Set-up strategy
+ *
+ */
+
+public class SetupStrategyDelta implements SetupStrategy {
+	Tile[][] gameBoard;
+	File inputFile;
+	
+	public SetupStrategyDelta() {
+		this.inputFile = new File(System.getProperty("user.dir") + "//src//hotciv//variant//deltaInput.txt");
+	}
+	
+	public SetupStrategyDelta(String filename) {
+		this.inputFile = new File(System.getProperty("user.dir") + "//src//hotciv//variant//" + filename);
+	}
+	
+	@Override
+	public Tile[][] setupGameboard() {
+		String[] layout = new String[GameConstants.WORLDSIZE];
+		String line;
+		int i = 0;
+		try {
+			Scanner scanner = new Scanner(inputFile);
+			while(scanner.hasNext()) {
+				line = scanner.next();
+				layout[i] = line;
+				i++;
+			}
+			scanner.close();
+		} catch (FileNotFoundException e) {
+			System.out.print("File not found, using default gameboard.\n");
+			layout = new String[] {
+					  "OOO...OOOOOOOOOO",
+			          "O.....O...H..MOO",
+			          "O.....O..H...FOO",
+			          ".FFF...O.FF....O",
+			          "........OOO.....",
+			          "O..MMM....OOOOOO",
+			          "OOOOO.........OO",
+			          "OOO..M.....OOOOO",
+			          "OO.HH....FFF..OO",
+			          "OOO.F...HH....OO",
+			          "O.....M...OOO..O",
+			          "O..MMM....OO....",
+			          "O.F..F.....HH..O",
+			          "OO......FF....OO",
+			          "OOOO.........OOO",
+			          "OO...HH..OOOOOOO",
+			};
+		}
+		
+		gameBoard = new Tile[GameConstants.WORLDSIZE][GameConstants.WORLDSIZE];
+
+		char tileChar;
+		String type;
+		for ( int r = 0; r < GameConstants.WORLDSIZE; r++ ) {
+		      line = layout[r];
+		      for ( int c = 0; c < GameConstants.WORLDSIZE; c++ ) {
+		        tileChar = line.charAt(c);
+		        type = "error";
+		        if ( tileChar == 'O' ) { type = GameConstants.OCEANS; }
+		        if ( tileChar == '.' ) { type = GameConstants.PLAINS; }
+		        if ( tileChar == 'M' ) { type = GameConstants.MOUNTAINS; }
+		        if ( tileChar == 'F' ) { type = GameConstants.FOREST; }
+		        if ( tileChar == 'H' ) { type = GameConstants.HILLS; }
+		        gameBoard[r][c] = new TileImpl(new Position(r,c), type);
+		      }
+		    }
+		setupUnitsAndCities();
+		return gameBoard;
+	}
+	
+	@Override
+	public void setupUnitsAndCities() {
+		gameBoard[8][12].addCity(new CityImpl(Player.RED, 1, GameConstants.LEGION, GameConstants.productionFocus));
+		gameBoard[4][5].addCity(new CityImpl(Player.BLUE, 1, GameConstants.ARCHER, GameConstants.productionFocus));
+		gameBoard[4][4].addCity(new CityImpl(Player.BLUE, 1, GameConstants.SETTLER, GameConstants.foodFocus));
+		gameBoard[3][8].setUnit(new UnitArcher(Player.RED));
+		gameBoard[4][4].setUnit(new UnitLegion(Player.BLUE));
+		gameBoard[5][5].setUnit(new UnitSettler(Player.BLUE));
+	}
+
+}

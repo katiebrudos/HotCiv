@@ -1,0 +1,12 @@
+package hotciv.variant;
+
+import hotciv.common.*;
+import hotciv.framework.*;
+
+
+public class DeltaFactory extends AlphaFactory {
+	@Override
+	public SetupStrategy getSetupStrategy() {
+		return new SetupStrategyDelta("deltaInput.txt");
+	}
+}

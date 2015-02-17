@@ -1,0 +1,11 @@
+package hotciv.variant;
+
+import hotciv.common.*;
+import hotciv.framework.*;
+
+public class GammaFactory extends AlphaFactory {
+	@Override
+	public ActionStrategy getActionStrategy() {
+		return new ActionStrategyGamma();
+	}
+}

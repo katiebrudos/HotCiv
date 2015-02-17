@@ -1,0 +1,33 @@
+package hotciv.visual;
+
+import hotciv.factory.SemiFactory;
+import hotciv.framework.City;
+import hotciv.framework.Game;
+import hotciv.framework.GameConstants;
+import hotciv.framework.Player;
+import hotciv.framework.Position;
+import hotciv.standard.CityImpl;
+import hotciv.standard.GameImpl;
+import hotciv.tool.ChangeCityTool;
+import hotciv.tool.TileFocusTool;
+import minidraw.framework.DrawingEditor;
+import minidraw.standard.MiniDrawApplication;
+
+public class ShowChangeCityTool {
+	public static void main(String[] args) {
+
+		Game game = new GameImpl(new SemiFactory());
+
+		DrawingEditor editor = 
+				new MiniDrawApplication("HotCiv world map, show city tool...",  
+						new HotCivFactory4(game) );
+		
+		City city = new CityImpl(Player.RED, 1, GameConstants.ARCHER.toString(),"apple");
+		game.setCityAt(new Position(7,5), city);
+		
+		editor.open();
+		editor.setTool(new ChangeCityTool(game, editor));
+		game.setTileFocus(new Position(7,5));
+		
+	}
+}

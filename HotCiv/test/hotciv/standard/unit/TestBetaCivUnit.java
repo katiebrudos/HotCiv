@@ -1,0 +1,80 @@
+package hotciv.standard.unit;
+
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+
+import hotciv.standard.CityImpl;
+import hotciv.standard.TileImpl;
+import hotciv.variant.*;
+import hotciv.framework.*;
+
+import org.junit.Before;
+import org.junit.Test;
+
+public class TestBetaCivUnit {
+	WinnerStrategy winnerStrategy;
+	AgeStrategy ageStrategy;
+	
+	@Before
+	public void setUp() {
+		winnerStrategy = new WinnerStrategyBeta();
+		ageStrategy = new AgeStrategyBeta();
+	}
+	
+	@Test
+	public void testWinner() {
+		ArrayList<Tile> cityTiles = new ArrayList<Tile>();
+		assertNull(winnerStrategy.getWinner(0,cityTiles,null,0));
+		Tile redCityTile = new TileImpl(new Position(0,0),"");
+		redCityTile.addCity(new CityImpl(Player.RED, 1, "", ""));
+		cityTiles.add(redCityTile);
+		assertEquals(Player.RED, winnerStrategy.getWinner(0,cityTiles,null,0));
+		Tile blueCityTile = new TileImpl(new Position(0,0),"");
+		blueCityTile.addCity(new CityImpl(Player.BLUE, 1, "", ""));
+		cityTiles.add(blueCityTile);
+		assertNull(winnerStrategy.getWinner(0,cityTiles,null,0));
+		redCityTile.getCity().changeOwner(Player.BLUE);;
+		assertEquals(Player.BLUE, winnerStrategy.getWinner(0,cityTiles,null,0));
+	}
+	
+	@Test
+	public void testAgeGrowth4000BCto100BC() {
+		assertEquals(100,ageStrategy.incrementAge(-4000));
+		assertEquals(100,ageStrategy.incrementAge(-3900));
+		assertEquals(100,ageStrategy.incrementAge(-300));
+		assertEquals(100,ageStrategy.incrementAge(-200));
+	}
+	
+	@Test
+	public void testAgeGrowth100BCto50AD() {	
+		assertEquals(99,ageStrategy.incrementAge(-100));
+		assertEquals(2,ageStrategy.incrementAge(-1));
+		assertEquals(49,ageStrategy.incrementAge(1));
+	}
+	
+	@Test
+	public void testAgeGrowth50ADto1750AD() {
+		assertEquals(50,ageStrategy.incrementAge(50));
+		assertEquals(50,ageStrategy.incrementAge(1700));
+	}
+	
+	@Test
+	public void testAgeGrowth1750ADto1900AD() {
+		assertEquals(25,ageStrategy.incrementAge(1750));
+		assertEquals(25,ageStrategy.incrementAge(1875));
+	}
+		
+	@Test
+	public void testAgeGrowth1900ADto1970AD() {
+		assertEquals(5,ageStrategy.incrementAge(1900));
+		assertEquals(5,ageStrategy.incrementAge(1965));
+	}
+	
+	@Test
+	public void testAgeGrowth1970ADtoInfinityAndBeyond() {
+		assertEquals(1,ageStrategy.incrementAge(1970));
+		assertEquals("Looks like the Mayans were right, 2012 is the end!",1,ageStrategy.incrementAge(2012));
+		assertEquals(1,ageStrategy.incrementAge(3741));
+	}
+}

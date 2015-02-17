@@ -1,0 +1,175 @@
+ <project name="HotCiv" default="test" basedir=".">
+	<property name="source-directory" value="src"/>
+	<property name="test-source-directory" value="test"/>
+	<property name="build-directory" value="build"/>
+	<property name="javadoc-directory" value="javadoc"/>
+ 	<property name="resource" value="resource"/>
+ 	
+ 	<property name="minidrawJar" value="lib/minidraw.jar"/>
+ 	
+	<path id="junit-path">
+		<pathelement location="${build-directory}"/>
+		<pathelement location="lib/junit-4.4.jar"/>
+		<pathelement location="${minidrawJar}"/>
+	</path>
+	
+	<target name="help">
+		<echo>HotCiv build management.
+	Targets:
+		clean:		removes all compiled files and javadocs
+		prepare:	creates necessary directories
+		build-src:	compiles source files
+		build-test:	compiles test files
+		build-all:	compiles all java files
+		test:		runs AlphaCiv's test file
+		javadoc:	generates javadoc
+		show:          Test MapView
+	    text:          Test TextFigure
+	    city:          Test CityFigure
+		 update:       Test partial CivDrawing implementation
+		</echo>
+	</target>
+	
+	<target name="clean">
+		<delete dir="${build-directory}"/>
+		<delete dir="${javadoc-directory}"/>
+	</target>
+	
+	<target name="prepare">
+		<mkdir dir="${build-directory}"/>
+		<mkdir dir="${javadoc-directory}"/>
+	</target>
+	
+	<target name="build-src" depends="prepare">
+		<javac srcdir="${source-directory}" destdir="${build-directory}">
+			<classpath refid="junit-path"/>
+		</javac>
+	</target>
+	
+	<target name="build-test" depends="build-src">
+		<javac srcdir="${test-source-directory}"
+			destdir="${build-directory}">
+			<classpath refid="junit-path"/>
+		</javac>
+	</target>
+	
+	<target name="build-all" depends="build-src, build-test"/>
+ 	
+   <target name="copyResource" depends="prepare">
+    <copy todir="${build-directory}\${resource}" >
+       <fileset dir="${resource}">
+ 	<include name="*.gif"/>
+       </fileset>
+     </copy>
+   	<echo> Resource folder copy success.
+   		</echo>
+   </target>
+ 	
+ 	
+ 	  <!-- run visual testing application -->
+ 	  <target name="show" depends="build-all">
+ 	    <java fork ="true" classname="hotciv.visual.ShowWorld">
+ 	      <classpath>
+ 		<path refid="junit-path"/>
+ 	      </classpath>
+ 	    </java>
+ 	  </target>
+
+ 	  <target name="text" depends="build-all">
+ 	    <java fork="true" classname="hotciv.visual.ShowText">
+ 	      <classpath>
+ 		<path refid="junit-path"/>
+ 	      </classpath>
+ 	    </java>
+ 	  </target>
+
+ 	  <target name="city" depends="build-all">
+ 	    <java fork="true" classname="hotciv.visual.ShowCity">
+ 	      <classpath>
+ 		<path refid="junit-path"/>
+ 	      </classpath>
+ 	    </java>
+ 	  </target>
+ 
+ 	  <!-- dSoftArk targets -->
+ 	  <target name="update" depends="build-all">
+ 	  	  <java fork="yes" classname="hotciv.visual.TestPartialDrawing">
+ 	      <classpath>
+ 		<path refid="junit-path"/>
+ 	      </classpath>
+ 	    </java> 
+ 	  </target>
+	
+	<target name="test" depends="build-all">
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.integration.TestAlphaCivIntegration"/>
+			<classpath refid="junit-path"/>
+		</java>
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.integration.TestBetaCivIntegration"/>
+			<classpath refid="junit-path"/>
+		</java>
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.integration.TestDeltaCivIntegration"/>
+			<classpath refid="junit-path"/>
+		</java>
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.integration.TestGammaCivIntegration"/>
+			<classpath refid="junit-path"/>
+		</java>
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.integration.TestEpsilonIntegration"/>
+			<classpath refid="junit-path"/>
+		</java>
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.integration.TestZetaCivIntegration"/>
+			<classpath refid="junit-path"/>
+		</java>
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.integration.TestEtaCivIntegration"/>
+			<classpath refid="junit-path"/>
+		</java>
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.integration.TestSemiCivIntegration"/>
+			<classpath refid="junit-path"/>
+		</java>
+		
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.unit.TestAlphaCivUnit"/>
+			<classpath refid="junit-path"/>
+		</java>
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.unit.TestBetaCivUnit"/>
+			<classpath refid="junit-path"/>
+		</java>
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.unit.TestDeltaCivUnit"/>
+			<classpath refid="junit-path"/>
+		</java>
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.unit.TestGammaCivUnit"/>
+			<classpath refid="junit-path"/>
+		</java>
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.unit.TestEpsilonCivUnit"/>
+			<classpath refid="junit-path"/>
+		</java>
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.unit.TestZetaCivUnit"/>
+			<classpath refid="junit-path"/>
+		</java>
+		<java classname="org.junit.runner.JUnitCore">
+			<arg value="hotciv.standard.unit.TestEtaCivUnit"/>
+			<classpath refid="junit-path"/>
+		</java>
+	</target>
+	
+	<target name="javadoc" depends="prepare">
+		<javadoc
+			packagenames="hotciv.*"
+			destdir="${javadoc-directory}"
+			sourcepath="${source-directory}"
+			windowtitle="AlphaCiv">
+		</javadoc>
+	</target>
+</project>

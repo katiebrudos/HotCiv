@@ -1,0 +1,14 @@
+package hotciv.common;
+
+import hotciv.framework.City;
+import hotciv.framework.GrowthStrategy;
+import hotciv.framework.Tile;
+
+public class GrowthStrategyAlpha implements GrowthStrategy {
+
+	@Override
+	public void grow(City city) {
+		// do nothing
+	}
+
+}

@@ -1,0 +1,61 @@
+package hotciv.tool;
+
+import hotciv.framework.Game;
+import hotciv.framework.GameConstants;
+import hotciv.framework.Position;
+import hotciv.view.GfxConstants;
+
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+
+import minidraw.framework.DrawingEditor;
+import minidraw.standard.AbstractTool;
+import minidraw.standard.NullTool;
+
+public class ChangeCityTool extends NullTool {
+	private Game game;
+
+	public ChangeCityTool(Game game, DrawingEditor editor) {
+		super();
+		this.game = game;
+	}
+
+	public void mouseDown(MouseEvent e, int x, int y) {
+<<<<<<< .mine
+		
+		System.out.println("ChangeCityTool activated: pos ->" );
+		
+		if(y >= GfxConstants.WORKFORCEFOCUS_X 
+				&& y < GfxConstants.WORKFORCEFOCUS_X+GfxConstants.TILESIZE  
+				&& x>= GfxConstants.WORKFORCEFOCUS_Y && x < GfxConstants.WORKFORCEFOCUS_Y+GfxConstants.TILESIZE){
+			
+			Position p = new Position(GfxConstants.WORKFORCEFOCUS_Y, GfxConstants.WORKFORCEFOCUS_X);
+			String bal = game.getCityAt(p).getWorkforceFocus();
+			
+			if(bal.equals(GameConstants.foodFocus)){ bal = GameConstants.productionFocus;}
+			else{ bal = GameConstants.foodFocus;}
+			game.changeWorkForceFocusInCityAt(new Position(GfxConstants.WORKFORCEFOCUS_Y, GfxConstants.WORKFORCEFOCUS_X), bal);
+			
+			System.out.println("ChangeCityTool activated: workforce change" );
+		}
+		else if(y >= GfxConstants.CITY_PRODUCTION_X
+				&& y< GfxConstants.CITY_PRODUCTION_X+GfxConstants.TILESIZE
+				&& x >= GfxConstants.CITY_PRODUCTION_Y
+				&& x < GfxConstants.CITY_PRODUCTION_Y+ GfxConstants.TILESIZE){
+			Position p = new Position(GfxConstants.CITY_PRODUCTION_Y, GfxConstants.CITY_PRODUCTION_X);
+			String production = game.getCityAt(p).getProduction();
+			
+			if(production.equals(GameConstants.ARCHER)){ production = GameConstants.LEGION;}
+			else if(production.equals(GameConstants.LEGION)){ production = GameConstants.SETTLER;}
+			else{ production = GameConstants.ARCHER;}
+			game.changeProductionInCityAt(p, production);
+			
+			System.out.println("ChangeCityTool activated: production change" );
+			
+		}
+
+=======
+		
+>>>>>>> .r34437
+	}
+}

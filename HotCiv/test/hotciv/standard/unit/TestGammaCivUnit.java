@@ -1,0 +1,113 @@
+package hotciv.standard.unit;
+
+import static org.junit.Assert.*;
+import hotciv.framework.*;
+import hotciv.standard.CityImpl;
+import hotciv.standard.TileImpl;
+import hotciv.standard.UnitArcher;
+import hotciv.standard.UnitLegion;
+import hotciv.standard.UnitSettler;
+import hotciv.variant.ActionStrategyGamma;
+import hotciv.common.*;
+
+import org.junit.Before;
+import org.junit.Test;
+
+public class TestGammaCivUnit {
+	Tile[][] gameBoard;
+	ActionStrategyGamma actionStrategyGamma;
+	Position p;
+	
+	@Before
+	public void setUp() {
+		gameBoard = new Tile[GameConstants.WORLDSIZE][GameConstants.WORLDSIZE];
+		for(int i = 0; i < GameConstants.WORLDSIZE; i++) {
+			for( int j = 0; j < GameConstants.WORLDSIZE; j++) {
+				gameBoard[i][j] = new TileImpl (new Position(i,j), GameConstants.PLAINS);
+			}
+		}
+		actionStrategyGamma = new ActionStrategyGamma();
+		p = new Position(0,0);
+	}
+	
+	@Test
+	public void testAlphaActionsDoNothing() {
+		ActionStrategyAlpha asAlpha = new ActionStrategyAlpha();
+		Unit archer = new UnitArcher(Player.RED);
+		Unit legion = new UnitLegion(Player.RED);
+		Unit settler = new UnitSettler(Player.RED);
+		//archer
+		gameBoard[0][0].setUnit(archer);
+		assertEquals(3, archer.getDefensiveStrength());
+		assertEquals(2, archer.getAttackingStrength());
+		assertEquals(1, archer.getMoveCount());
+		asAlpha.performUnitActionAt(gameBoard, p);
+		assertEquals(archer, gameBoard[0][0].getUnit());
+		assertEquals(3, archer.getDefensiveStrength());
+		assertEquals(2, archer.getAttackingStrength());
+		assertEquals(1, archer.getMoveCount());
+		//legion
+		gameBoard[0][0].setUnit(legion);
+		assertEquals(2, legion.getDefensiveStrength());
+		assertEquals(4, legion.getAttackingStrength());
+		assertEquals(1, legion.getMoveCount());
+		asAlpha.performUnitActionAt(gameBoard, p);
+		assertEquals(legion, gameBoard[0][0].getUnit());
+		assertEquals(2, legion.getDefensiveStrength());
+		assertEquals(4, legion.getAttackingStrength());
+		assertEquals(1, legion.getMoveCount());
+		//settler
+		gameBoard[0][0].setUnit(settler);
+		assertEquals(3, settler.getDefensiveStrength());
+		assertEquals(0, settler.getAttackingStrength());
+		assertEquals(1, settler.getMoveCount());
+		asAlpha.performUnitActionAt(gameBoard, p);
+		assertEquals(settler, gameBoard[0][0].getUnit());
+		assertEquals(3, settler.getDefensiveStrength());
+		assertEquals(0, settler.getAttackingStrength());
+		assertEquals(1, settler.getMoveCount());
+	}
+	
+	@Test
+	public void testLegionActionDoesNothing() {
+		Unit legion = new UnitLegion(Player.RED);
+		gameBoard[0][0].setUnit(legion);
+		assertEquals(2, legion.getDefensiveStrength());
+		assertEquals(4, legion.getAttackingStrength());
+		assertEquals(1, legion.getMoveCount());
+		actionStrategyGamma.performUnitActionAt(gameBoard, new Position(0,0));
+		assertEquals(legion, gameBoard[0][0].getUnit());
+		assertEquals(2, legion.getDefensiveStrength());
+		assertEquals(4, legion.getAttackingStrength());
+		assertEquals(1, legion.getMoveCount());
+	}
+	
+	@Test
+	public void testSettlerAction() {
+		Unit settler = new UnitSettler(Player.RED);
+		gameBoard[0][0].setUnit(settler);
+		assertEquals(settler, gameBoard[0][0].getUnit());
+		assertNull(gameBoard[0][0].getCity());
+		actionStrategyGamma.performUnitActionAt(gameBoard, p);
+		assertNull(gameBoard[0][0].getUnit());
+		assertEquals(new CityImpl(Player.RED, 1, GameConstants.ARCHER, GameConstants.productionFocus), gameBoard[0][0].getCity());
+	}
+
+	@Test
+	public void testArcherAction() {
+		Unit archer = new UnitArcher(Player.RED);
+		gameBoard[0][0].setUnit(archer);
+		assertEquals(archer, gameBoard[0][0].getUnit());
+		assertEquals(3, archer.getDefensiveStrength());
+		assertEquals(2, archer.getAttackingStrength());
+		assertEquals(1, archer.getMoveCount());
+		actionStrategyGamma.performUnitActionAt(gameBoard, p);
+		assertEquals(6, archer.getDefensiveStrength());
+		assertEquals(2, archer.getAttackingStrength());
+		assertEquals(0, archer.getMoveCount());
+		actionStrategyGamma.performUnitActionAt(gameBoard, p);
+		assertEquals(3, archer.getDefensiveStrength());
+		assertEquals(2, archer.getAttackingStrength());
+		assertEquals(1, archer.getMoveCount());
+	}
+}

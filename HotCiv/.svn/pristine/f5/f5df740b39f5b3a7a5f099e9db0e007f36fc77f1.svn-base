@@ -1,0 +1,25 @@
+package hotciv.tool;
+
+import hotciv.framework.Game;
+import hotciv.framework.GameConstants;
+import hotciv.view.GfxConstants;
+
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+
+import minidraw.framework.DrawingEditor;
+import minidraw.standard.AbstractTool;
+import minidraw.standard.NullTool;
+
+public class ChangeCityTool extends NullTool {
+	private Game game;
+
+	public ChangeCityTool(Game game, DrawingEditor editor) {
+		super();
+		this.game = game;
+	}
+
+	public void mouseDown(MouseEvent e, int x, int y) {
+
+	}
+}

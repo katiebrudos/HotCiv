@@ -1,0 +1,20 @@
+package hotciv.variant;
+
+
+import hotciv.common.*;
+import hotciv.framework.*;
+import hotciv.common.AlphaFactory;
+import hotciv.framework.AgeStrategy;
+import hotciv.framework.WinnerStrategy;
+
+public class BetaFactory extends AlphaFactory {
+	@Override
+	public AgeStrategy getAgeStrategy() {
+		return new AgeStrategyBeta();
+	}
+
+	@Override
+	public WinnerStrategy getWinnerStrategy() {
+		return new WinnerStrategyBeta();
+	}
+}

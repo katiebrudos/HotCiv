@@ -1,0 +1,247 @@
+package hotciv.standard.unit;
+import hotciv.common.*;
+import hotciv.factory.AlphaFactory;
+import hotciv.framework.*;
+import hotciv.standard.CityImpl;
+import hotciv.standard.GameImpl;
+import hotciv.standard.TileImpl;
+import hotciv.standard.UnitArcher;
+import hotciv.standard.UnitLegion;
+
+import org.junit.*;
+
+import static org.junit.Assert.*;
+
+/** Skeleton class for AlphaCiv test cases 
+
+   This source code is from the book 
+     "Flexible, Reliable Software:
+       Using Patterns and Agile Development"
+     published 2010 by CRC Press.
+   Author: 
+     Henrik B Christensen 
+     Computer Science Department
+     Aarhus University
+
+   This source code is provided WITHOUT ANY WARRANTY either 
+   expressed or implied. You may study, use, modify, and 
+   distribute it for non-commercial purposes. For any 
+   commercial use, see http://www.baerbak.com/
+ */
+public class TestAlphaCivUnit {
+	private Game game;
+	/** Fixture for alphaciv testing. */
+	@Before
+	public void setUp() {
+		game = new GameImpl(new AlphaFactory()); 
+	}
+
+	//---------------------TILE--------------------------
+	@Test
+	public void testTileNotNull() {
+		assertNotNull(new TileImpl(null,null));
+	}
+
+	@Test
+	public void testTilePositionAt1_1() {
+		assertEquals(new Position(1, 1),new TileImpl(new Position(1,1),null).getPosition());
+	}
+
+	@Test
+	public void testTilePositionAt4_2() {
+		assertEquals(new Position(4, 2),new TileImpl(new Position(4,2),null).getPosition());
+	}
+
+	@Test
+	public void testTileTypeIsPlains() {
+		assertEquals(GameConstants.PLAINS,new TileImpl(new Position(0,0),GameConstants.PLAINS).getTypeString());
+	}
+
+	@Test
+	public void testTileTypeIsOcean() {
+		assertEquals(GameConstants.OCEANS,new TileImpl(new Position(0,0),GameConstants.OCEANS).getTypeString());
+	}
+
+	//---------------------UNIT--------------------------
+	@Test
+	public void testUnitNotNull() {
+		assertNotNull(new UnitArcher(null));
+	}
+
+	@Test
+	public void testUnitTypeIsArcher() {
+		assertEquals(GameConstants.ARCHER,new UnitArcher(null).getTypeString());
+	}
+
+	@Test
+	public void testUnitTypeIsLegion() {
+		assertEquals(GameConstants.LEGION,new UnitLegion(null).getTypeString());
+	}
+
+	@Test
+	public void testUnitOwnerIsBlue() {
+		assertEquals(Player.BLUE,new UnitArcher(Player.BLUE).getOwner());
+	}
+
+	@Test
+	public void testUnitOwnerIsRed() {
+		assertEquals(Player.RED,new UnitArcher(Player.RED).getOwner());
+	}
+
+	@Test
+	public void testUnitMoveCountIs1() {
+		assertEquals(1,new UnitArcher(null).getMoveCount());
+	}
+
+	//---------------------CITY--------------------------
+	@Test
+	public void testCityNotNull() {
+		assertNotNull(new CityImpl(null,0,null,null));
+	}
+
+	@Test
+	public void testCityOwnerIsRed() {
+		assertEquals(Player.RED, new CityImpl(Player.RED, 0, null, null).getOwner());
+	}
+
+	@Test
+	public void testCityOwnerIsBlue() {
+		assertEquals(Player.BLUE, new CityImpl(Player.BLUE, 0, null, null).getOwner());
+	}
+
+	@Test
+	public void testCitySizeIsOne() {
+		assertEquals(1, new CityImpl(null, 1, null, null).getSize());
+	}
+
+	@Test
+	public void testCityProductionIsArcher() {
+		assertEquals(GameConstants.ARCHER, new CityImpl(null, 0, GameConstants.ARCHER, null).getProduction());
+	}
+
+	@Test
+	public void testCityProductionIsLegion() {
+		assertEquals(GameConstants.LEGION, new CityImpl(null, 0, GameConstants.LEGION, null).getProduction());
+	}
+
+	@Test
+	public void testCityWorkForceIsProduction() {
+		assertEquals(GameConstants.productionFocus, new CityImpl(null, 0, null, GameConstants.productionFocus).getWorkforceFocus());
+	}
+
+	@Test
+	public void testCityWorkFocusIsFood() {
+		assertEquals(GameConstants.foodFocus, new CityImpl(null, 0, null, GameConstants.foodFocus).getWorkforceFocus());
+	}
+
+	//---------------------GAME--------------------------
+	@Test
+	public void testGameNotNull() {
+		assertNotNull(game);
+	}
+
+	@Test
+	public void testRedStartsTurnFirst() {
+		assertEquals(Player.RED, game.getPlayerInTurn());
+	}
+
+	@Test
+	public void testBlueTurnAfterRed() {
+		assertEquals(Player.RED, game.getPlayerInTurn());
+		game.endOfTurn();
+		assertEquals(Player.BLUE, game.getPlayerInTurn());
+	}
+
+	@Test
+	public void testRedTurnAfterBlue() {
+		assertEquals(Player.RED, game.getPlayerInTurn());
+		game.endOfTurn();
+		assertEquals(Player.BLUE, game.getPlayerInTurn());
+		game.endOfTurn();
+		assertEquals(Player.RED, game.getPlayerInTurn());
+	}
+
+	@Test
+	public void testProductionFocusCanChange() {
+		City theCity = new CityImpl(Player.BLUE,1,GameConstants.SETTLER,"");
+		theCity.setProduction(GameConstants.ARCHER);
+		assertEquals(GameConstants.ARCHER, theCity.getProduction());
+		theCity.setProduction(GameConstants.LEGION);
+		assertEquals(GameConstants.LEGION, theCity.getProduction());
+		theCity.setProduction(GameConstants.SETTLER);
+		assertEquals(GameConstants.SETTLER, theCity.getProduction());
+	}
+
+	@Test
+	public void testWorkforceFocusCanChange() {
+		City theCity = new CityImpl(Player.BLUE,1,"",GameConstants.foodFocus);
+		theCity.setWorkforceFocus(GameConstants.foodFocus);
+		assertEquals(GameConstants.foodFocus, theCity.getWorkforceFocus());
+		theCity.setWorkforceFocus(GameConstants.productionFocus);
+		assertEquals(GameConstants.productionFocus, theCity.getWorkforceFocus());
+	}
+	
+	@Test
+	public void testAgeStartsAt4000BC() {
+		assertEquals(-4000, game.getAge());
+	}
+	
+	@Test
+	public void testAgeIncreasesBy100() {
+		assertEquals(-4000, game.getAge());
+		game.endOfRound();
+		assertEquals(-3900, game.getAge());
+		game.endOfRound();
+		assertEquals(-3800, game.getAge());
+	}
+	
+	@Test
+	public void testRedWinsAt3000() {
+		assertNull(game.getWinner());
+		game.endOfRound();
+		assertNull(game.getWinner());
+		for(int i = 1; i < 10; i++) {
+			game.endOfRound();
+		}
+		assertEquals(-3000, game.getAge());
+		assertEquals(Player.RED, game.getWinner());
+	}
+	
+	@Test
+	public void testProducedUnitAppearsInEmptyCity() {
+		City theCity = new CityImpl(Player.RED, 1, GameConstants.ARCHER, "");
+		game.setCityAt(new Position(5,4), theCity);
+		theCity.addProduction(50);
+		assertNull(game.getUnitAt(new Position(5,4)));
+		game.endOfRound();
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(5,4)).getTypeString());
+	}
+	
+	@Test
+	public void testProducedUnitAppearsNorthOfOccupiedCity() {
+		City theCity = new CityImpl(Player.RED, 1, GameConstants.ARCHER, "");
+		game.setCityAt(new Position(5,4), theCity);
+		theCity.addProduction(50);
+		game.endOfRound();
+		assertNull(game.getUnitAt(new Position(5,5)));
+		game.endOfRound();
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(5,5)).getTypeString());
+	}
+	
+	@Test
+	public void testAlphaCivSetup() {
+		assertEquals(Player.RED, game.getPlayerInTurn());
+		assertEquals(Player.RED, game.getCityAt(new Position(1,1)).getOwner());
+		assertEquals(Player.BLUE, game.getCityAt(new Position(4,2)).getOwner());
+		assertEquals(GameConstants.PLAINS, game.getTileAt(new Position(0,0)).getTypeString());
+		assertEquals(GameConstants.OCEANS, game.getTileAt(new Position(1,0)).getTypeString());
+		assertEquals(GameConstants.HILLS, game.getTileAt(new Position(0,1)).getTypeString());
+		assertEquals(GameConstants.MOUNTAINS, game.getTileAt(new Position(2,2)).getTypeString());
+		assertEquals(GameConstants.ARCHER, game.getUnitAt(new Position(2,0)).getTypeString());
+		assertEquals(Player.RED, game.getUnitAt(new Position(2,0)).getOwner());
+		assertEquals(GameConstants.LEGION, game.getUnitAt(new Position(3,2)).getTypeString());
+		assertEquals(Player.BLUE, game.getUnitAt(new Position(3,2)).getOwner());
+		assertEquals(GameConstants.SETTLER, game.getUnitAt(new Position(4,3)).getTypeString());
+		assertEquals(Player.RED, game.getUnitAt(new Position(4,3)).getOwner());
+	}
+}
