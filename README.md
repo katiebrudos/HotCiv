@@ -8,4 +8,3 @@ Some specific files that I worked on:
     /src/hotciv/tool/tileFocusTool.java
     /src/hotciv/tool/integrationTool.java
 
-*note: many of the jar files are currently broken to my dismay, I am trying to find the source because they all should work. So even thought the tests are broken, the project should run using the above instructions. 
